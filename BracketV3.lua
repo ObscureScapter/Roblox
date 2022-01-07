@@ -653,7 +653,7 @@ function Library:CreateWindow(Config, Parent)
 				end
 				return DropdownInit
 			end
-			function SectionInit:CreateColorpicker(Name,Callback)
+			function SectionInit:CreateColorpicker(Name, Color, Callback)
 				local ColorpickerInit = {}
 				local Colorpicker = Folder.Colorpicker:Clone()
 				local Pallete = Folder.Pallete:Clone()
@@ -662,7 +662,7 @@ function Library:CreateWindow(Config, Parent)
 				Colorpicker.Parent = Section.Container
 				Colorpicker.Title.Text = Name
 				Colorpicker.Size = UDim2.new(1,-10,0,Colorpicker.Title.TextBounds.Y + 5)
-
+				Colorpicker.Color.BackgroundColor3	= Color
 				Pallete.Name = Name .. " P"
 				Pallete.Parent = Screen
 
