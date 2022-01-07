@@ -270,6 +270,12 @@ function Library:CreateWindow(Config, Parent)
 				Button.MouseButton1Click:Connect(function()
 					Callback()
 				end)
+				
+				function ButtonInit:AdjustName(Name)
+					if tostring(Name):gsub(" ", "") ~= "" then
+						Button.Title.Text = Name
+					end
+				end
 
 				function ButtonInit:AddToolTip(Name)
 					if tostring(Name):gsub(" ", "") ~= "" then
