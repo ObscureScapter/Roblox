@@ -58,7 +58,8 @@ function Library:CreateWindow(Config, Parent)
 	Screen.Name =  HttpService:GenerateGUID(false)
 	Screen.Parent = Parent
 	Topbar.WindowName.Text = Config.WindowName
-
+	
+	Main.Position	= Config.Position
 	MakeDraggable(Topbar,Main)
 	local function CloseAll()
 		for _,Tab in pairs(TContainer:GetChildren()) do
