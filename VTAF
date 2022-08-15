@@ -126,11 +126,14 @@ end
 CreateDivider("Scapters AutoFarm")
 for i,v in pairs(mySettings) do
     if type(v) == "boolean" then
-        CreateToggle(createFakeSettings("BoolValue", i, v), i)
+        local realSetting   = createFakeSettings("BoolValue", i, v)
+        CreateToggle(realSetting, i)
     elseif type(v) == "string" then
-        CreateDropdown(createFakeSettings("StringValue", i, v), "Mode", {"Walk", "Tween", "SmartTween"}, 3)
+        local realSetting   = createFakeSettings("StringValue", i, v)
+        CreateDropdown(realSetting, "Mode", {"Walk", "Tween", "SmartTween"}, 3)
     elseif type(v) == "number" then
-        CreateSlider(createFakeSettings("NumberValue", i, v), i, 0.01, 1, 16)
+        local realSetting   = createFakeSettings("NumberValue", i, v)
+        CreateSlider(realSetting, i, 0.01, 1, 16)
     end
 end
 
