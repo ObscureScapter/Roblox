@@ -6,6 +6,7 @@ local Workspace = game:GetService("Workspace")
 local RunService    = game:GetService("RunService")
 local HttpService   = game:GetService("HttpService")
 local TweenService  = game:GetService("TweenService")
+local ScriptContext = game:GetService("ScriptContext")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PathfindingService    = game:GetService("PathfindingService")
 
@@ -83,6 +84,11 @@ local uIScale   = 0
 --  functions
 
 if game.PlaceVersion ~= 763 then Player:Kick("\nGame Updated\nWait For Script Update!") return end
+
+for i,v in pairs(getconnections(Player.Idled)) do
+    v:Disable()
+end
+ScriptContext:SetTimeout(2)
 
 if not newData or not Info then
 	writefile("VTAF.lua", HttpService:JSONEncode(mySettings))
