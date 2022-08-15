@@ -4,8 +4,8 @@ local Players   = game:GetService("Players")
 local CoreGui   = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local RunService    = game:GetService("RunService")
+local HttpService   = game:GetService("HttpService")
 local TweenService  = game:GetService("TweenService")
-local UserInputService  = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PathfindingService    = game:GetService("PathfindingService")
 
@@ -346,12 +346,6 @@ local function drawPath(count, node)
     myNode.Parent   = nodeHolder
 end
 
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.E then
-        mySettings.isFarming   = not mySettings.isFarming
-    end
-end)
-
 while RunService.RenderStepped:Wait() do
     pcall(function()
         if Player.Character:FindFirstChild("HumanoidRootPart") and mySettings.isFarming then
@@ -416,9 +410,9 @@ while RunService.RenderStepped:Wait() do
                                 local attempts  = 0
                                 local maxAttempts   = 18
                                 local jumpDeb   = tick()
-
-                                if Mode:lower() == "walk" then
-                                    repeat 
+                                
+                                if mySettings.Mode:lower() == "walk" then
+                                    repeat
                                         task.wait(0.05)
                                         attempts    += 1
 
