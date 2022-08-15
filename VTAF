@@ -1,9 +1,7 @@
-local Mode  = "Walk"   -- Tween, Walk, SmartTween (Walk is less buggy!)
-local isFarming = true
-
 --  services
 
 local Players   = game:GetService("Players")
+local CoreGui   = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local RunService    = game:GetService("RunService")
 local TweenService  = game:GetService("TweenService")
@@ -61,8 +59,88 @@ local ItemTypes = {
 }
 local finishedLevel = false
 local nodeHolder    = Instance.new("Folder")
+local defaultSettings    = {
+    Mode  = "Walk",
+    isFarming = true,
+    showNodes   = true,
+}
+local mySettings    = {
+    Mode  = "Walk",
+    isFarming = true,
+    showNodes   = true,
+}
+local newData, Info	= pcall(function() return readfile("VTAF.lua") end)
+local SettingsController    = getsenv(Gui:WaitForChild("Settings").SettingsController)
+local CreateDropdown    = SettingsController.CreateDropdown
+local CreateToggle    = SettingsController.CreateToggle
+local CreateSlider    = SettingsController.CreateSlider
+local CreateDivider = SettingsController.CreateDivider
+local possibleSettings  = Gui.Settings.SettingsFrame.Settings.Frame:GetChildren()
+local myScale   = Gui:WaitForChild("UIScale").Value / 10
+local uIScale   = 0
 
 --  functions
+
+if not newData or not Info then
+	writefile("VTAF.lua", HttpService:JSONEncode(mySettings))
+else
+	mySettings	= HttpService:JSONDecode(Info)
+end
+
+for i,v in pairs(defaultSettings) do
+	if mySettings[i] == nil then
+		mySettings[i]	= v
+
+		writefile("VTAF.lua", HttpService:JSONEncode(mySettings))
+	end
+end
+
+local function createFakeSettings(type, name, value)
+    local myValue   = Instance.new(type)
+    myValue.Name    = name
+    myValue.Value = value
+    myValue.Parent    = Player
+
+    local newLabel  = Instance.new("TextLabel")
+    newLabel.Text   = tostring(value)
+    newLabel.Name   = "Label"
+    newLabel.Parent = myValue
+
+    myValue:GetPropertyChangedSignal("Value"):Connect(function()
+        mySettings[name]    = myValue.Value
+        writefile("VTAF.lua", HttpService:JSONEncode(mySettings))
+    end)
+
+    return myValue
+end
+
+CreateDivider("Scapters AutoFarm")
+for i,v in pairs(mySettings) do
+    if type(v) == "boolean" then
+        CreateToggle(createFakeSettings("BoolValue", i, v), i)
+    elseif type(v) == "string" then
+        CreateDropdown(createFakeSettings("StringValue", i, v), "Mode", {"Walk", "Tween", "SmartTween"}, 3)
+    elseif type(v) == "number" then
+        CreateSlider(createFakeSettings("Numbervalue", i, v), i, 1, v, 16)
+    end
+end
+
+possibleSettings    = Gui.Settings.SettingsFrame.Settings.Frame:GetChildren()
+for _,v in pairs(possibleSettings) do
+    if v.Name ~= "UIPadding" then
+        if v:FindFirstChild("Label") and (mySettings[v.Label.Text] ~= nil or v.Label.Text == "Scapters AutoFarm") then
+            v.Position  =  v.Position+UDim2.new(0, 0, 0, 80 * 28)
+
+            if v.Label.Text == "Mode" then
+                v.Frame.DropdownButton.Option:GetPropertyChangedSignal("Text"):Connect(function()
+                    Player.Mode.Value   = v.Frame.DropdownButton.Option.Text
+                end)
+            end
+        end
+        uIScale += 80
+    end
+end
+Gui.Settings.SettingsFrame.Settings.Frame.CanvasSize    = UDim2.new(0, 0, 0, uIScale * myScale)
 
 nodeHolder.Name = "Nodes"
 nodeHolder.Parent   = Map
@@ -254,6 +332,8 @@ RunService.RenderStepped:Connect(function()
 end)
 
 local function drawPath(count, node)
+    if not mySettings.showNodes then return end
+
     local myNode    = nodeHolder:FindFirstChild(count) or Instance.new("Part")
     myNode.Anchored = true
     myNode.CanCollide   = false
@@ -268,13 +348,13 @@ end
 
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.E then
-        isFarming   = not isFarming
+        mySettings.isFarming   = not mySettings.isFarming
     end
 end)
 
 while RunService.RenderStepped:Wait() do
     pcall(function()
-        if Player.Character:FindFirstChild("HumanoidRootPart") and isFarming then
+        if Player.Character:FindFirstChild("HumanoidRootPart") and mySettings.isFarming then
             local myTarget  = getClosestEnemy(Player.Character.HumanoidRootPart.CFrame.Position)
 
             if Projectiles:FindFirstChild("WaitingForPlayers") or Projectiles:FindFirstChild("BossWaitingForPlayers") or Map:FindFirstChild("LootChest") and not DungeonGui.LootContainer.Visible then
@@ -315,7 +395,7 @@ while RunService.RenderStepped:Wait() do
                 })
                 local originPath    = myTarget.CFrame.Position
 
-                if Mode:lower() == "walk" or Mode:lower() == "smarttween" then
+                if mySettings.Mode:lower() == "walk" or mySettings.Mode:lower() == "smarttween" then
                     myPath:ComputeAsync(Player.Character.HumanoidRootPart.CFrame.Position, originPath)
 
                     if myPath.Status and myPath.Status == Enum.PathStatus.Success then
@@ -357,18 +437,18 @@ while RunService.RenderStepped:Wait() do
                                         if not GameUI.Dash.CooldownLabel.Visible and math.random(1, 30) == 1 then
                                             Remotes.Action.ActivateAbility:FireServer(999)
                                         end
-                                    until not isFarming or attempts >= maxAttempts or (Player.Character.HumanoidRootPart.CFrame.Position-newMove).magnitude <= 3 or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or (myTarget.CFrame.Position-originPath).magnitude >= 5
+                                    until not mySettings.isFarming or attempts >= maxAttempts or (Player.Character.HumanoidRootPart.CFrame.Position-newMove).magnitude <= 3 or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or (myTarget.CFrame.Position-originPath).magnitude >= 5
                                 else
                                     flyTo(newMove)
                                 end
                                 
-                                if not isFarming or myTarget and myTarget.Parent and myTarget.Parent:FindFirstChild("Humanoid") and myTarget ~= getClosestEnemy(Player.Character.HumanoidRootPart.CFrame.Position) or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or attempts >= maxAttempts or (myTarget.CFrame.Position-originPath).magnitude >= 5 or i >= 3 then
+                                if not mySettings.isFarming or myTarget and myTarget.Parent and myTarget.Parent:FindFirstChild("Humanoid") and myTarget ~= getClosestEnemy(Player.Character.HumanoidRootPart.CFrame.Position) or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or attempts >= maxAttempts or (myTarget.CFrame.Position-originPath).magnitude >= 5 or i >= 3 then
                                     break
                                 end
                             end
                         end
                     elseif Player.Character and Player.Character:FindFirstChild("Humanoid") and myTarget and myTarget.Parent then
-                        if Mode:lower() == "walk" then
+                        if mySettings.Mode:lower() == "walk" then
                             Player.Character.Humanoid:MoveTo(myTarget.CFrame.Position)
                         else
                             flyTo(myTarget.CFrame.Position)
