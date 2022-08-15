@@ -7,6 +7,7 @@ local Players   = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local RunService    = game:GetService("RunService")
 local TweenService  = game:GetService("TweenService")
+local UserInputService  = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PathfindingService    = game:GetService("PathfindingService")
 
@@ -265,112 +266,116 @@ local function drawPath(count, node)
     myNode.Parent   = nodeHolder
 end
 
-if isFarming then
-    while RunService.RenderStepped:Wait() do
-        pcall(function()
-            if Player.Character:FindFirstChild("HumanoidRootPart") then
-                local myTarget  = getClosestEnemy(Player.Character.HumanoidRootPart.CFrame.Position)
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.E then
+        isFarming   = not isFarming
+    end
+end)
 
-                if Projectiles:FindFirstChild("WaitingForPlayers") or Projectiles:FindFirstChild("BossWaitingForPlayers") or Map:FindFirstChild("LootChest") and not DungeonGui.LootContainer.Visible then
+while RunService.RenderStepped:Wait() do
+    pcall(function()
+        if Player.Character:FindFirstChild("HumanoidRootPart") and isFarming then
+            local myTarget  = getClosestEnemy(Player.Character.HumanoidRootPart.CFrame.Position)
+
+            if Projectiles:FindFirstChild("WaitingForPlayers") or Projectiles:FindFirstChild("BossWaitingForPlayers") or Map:FindFirstChild("LootChest") and not DungeonGui.LootContainer.Visible then
+                myTarget    = Projectiles:FindFirstChild("WaitingForPlayers") and Projectiles["WaitingForPlayers"] or Projectiles:FindFirstChild("BossWaitingForPlayers") and Projectiles["BossWaitingForPlayers"] or Map["LootChest"].PrimaryPart
+            
+                if myTarget and myTarget.Parent and myTarget.Parent.Name == "LootChest" then
+                    Remotes.UI.EndDungeon.EndOfDungeonVote:FireServer("ReplayDungeon")
+                    repeat RunService.RenderStepped:Wait() until Projectiles:FindFirstChild("WaitingForPlayers")
+
                     myTarget    = Projectiles:FindFirstChild("WaitingForPlayers") and Projectiles["WaitingForPlayers"] or Projectiles:FindFirstChild("BossWaitingForPlayers") and Projectiles["BossWaitingForPlayers"] or Map["LootChest"].PrimaryPart
-                
-                    if myTarget and myTarget.Parent and myTarget.Parent.Name == "LootChest" then
-                        Remotes.UI.EndDungeon.EndOfDungeonVote:FireServer("ReplayDungeon")
-                        repeat RunService.RenderStepped:Wait() until Projectiles:FindFirstChild("WaitingForPlayers")
+                end
+            end
 
-                        myTarget    = Projectiles:FindFirstChild("WaitingForPlayers") and Projectiles["WaitingForPlayers"] or Projectiles:FindFirstChild("BossWaitingForPlayers") and Projectiles["BossWaitingForPlayers"] or Map["LootChest"].PrimaryPart
+            if myTarget and checkHumanoid(Player.Character) and myTarget.Parent then
+                for _,v in pairs(Map:GetChildren()) do
+                    if v.Name:find("Gate") then
+                        v:Destroy()
                     end
                 end
 
-                if myTarget and checkHumanoid(Player.Character) and myTarget.Parent then
-                    for _,v in pairs(Map:GetChildren()) do
-                        if v.Name:find("Gate") then
-                            v:Destroy()
-                        end
+                for _,v in pairs(Map.Segments:GetDescendants()) do
+                    if v:IsA("BasePart") and v.Transparency < 1 and not v.Name:find("Wall") and not v.Name:find("Bricks") and not v.Name:find("Floor") and not v.Parent.Name:find("Floor") and not v.Name:lower():find("coin") then
+                        v.CanCollide    = false
                     end
+                end
 
-                    for _,v in pairs(Map.Segments:GetDescendants()) do
-                        if v:IsA("BasePart") and v.Transparency < 1 and not v.Name:find("Wall") and not v.Name:find("Bricks") and not v.Name:find("Floor") and not v.Parent.Name:find("Floor") and not v.Name:lower():find("coin") then
-                            v.CanCollide    = false
-                        end
+                if Map:FindFirstChild("Forcefield") then
+                    for _,v in pairs(Map.Forcefield:GetChildren()) do
+                        v:Destroy()
                     end
+                end
 
-                    if Map:FindFirstChild("Forcefield") then
-                        for _,v in pairs(Map.Forcefield:GetChildren()) do
-                            v:Destroy()
+                local myPath    = PathfindingService:CreatePath({
+                    AgentRadius = 2,
+                    AgentHeight = 4,
+                    AgentCanJump = true,
+                    WaypointSpacing = 4.75,
+                })
+                local originPath    = myTarget.CFrame.Position
+
+                if Mode:lower() == "walk" or Mode:lower() == "smarttween" then
+                    myPath:ComputeAsync(Player.Character.HumanoidRootPart.CFrame.Position, originPath)
+
+                    if myPath.Status and myPath.Status == Enum.PathStatus.Success then
+                        myPath  = myPath:GetWaypoints()
+
+                        for _,v in pairs(nodeHolder:GetChildren()) do
+                            if tonumber(v.Name) >= #myPath then
+                                v.Transparency  = 1
+                            elseif myPath[tonumber(v.Name)] then
+                                drawPath(tonumber(v.Name), myPath[tonumber(v.Name)])
+                            end
                         end
-                    end
 
-                    local myPath    = PathfindingService:CreatePath({
-                        AgentRadius = 2,
-                        AgentHeight = 4,
-                        AgentCanJump = true,
-                        WaypointSpacing = 4.75,
-                    })
-                    local originPath    = myTarget.CFrame.Position
+                        for i,v in pairs(myPath) do
+                            if i > 1 then
+                                drawPath(i, v)
+                                local newMove   = v.Position+Vector3.new(0, 2.5, 0)
+                                local attempts  = 0
+                                local maxAttempts   = 18
+                                local jumpDeb   = tick()
 
-                    if Mode:lower() == "walk" or Mode:lower() == "smarttween" then
-                        myPath:ComputeAsync(Player.Character.HumanoidRootPart.CFrame.Position, originPath)
+                                if Mode:lower() == "walk" then
+                                    repeat 
+                                        task.wait(0.05)
+                                        attempts    += 1
 
-                        if myPath.Status and myPath.Status == Enum.PathStatus.Success then
-                            myPath  = myPath:GetWaypoints()
+                                        if myPath[i+2] then
+                                            headedTowards   = myPath[i+2].Position
+                                        else
+                                            headedTowards   = newMove
+                                        end
+                                        if (v.Action == Enum.PathWaypointAction.Jump or attempts >= math.floor(maxAttempts/1.25)) and tick()-jumpDeb >= 0.3 then
+                                            jumpDeb = tick()
+                                            Player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                                        end
+                                        Player.Character.Humanoid.MaxSlopeAngle = 89.9
+                                        Player.Character.Humanoid:MoveTo(newMove)
 
-                            for _,v in pairs(nodeHolder:GetChildren()) do
-                                if tonumber(v.Name) >= #myPath then
-                                    v.Transparency  = 1
-                                elseif myPath[tonumber(v.Name)] then
-                                    drawPath(tonumber(v.Name), myPath[tonumber(v.Name)])
+                                        if not GameUI.Dash.CooldownLabel.Visible and math.random(1, 30) == 1 then
+                                            Remotes.Action.ActivateAbility:FireServer(999)
+                                        end
+                                    until not isFarming or attempts >= maxAttempts or (Player.Character.HumanoidRootPart.CFrame.Position-newMove).magnitude <= 3 or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or (myTarget.CFrame.Position-originPath).magnitude >= 5
+                                else
+                                    flyTo(newMove)
+                                end
+                                
+                                if not isFarming or myTarget and myTarget.Parent and myTarget.Parent:FindFirstChild("Humanoid") and myTarget ~= getClosestEnemy(Player.Character.HumanoidRootPart.CFrame.Position) or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or attempts >= maxAttempts or (myTarget.CFrame.Position-originPath).magnitude >= 5 or i >= 3 then
+                                    break
                                 end
                             end
-
-                            for i,v in pairs(myPath) do
-                                if i > 1 then
-                                    drawPath(i, v)
-                                    local newMove   = v.Position+Vector3.new(0, 2.5, 0)
-                                    local attempts  = 0
-                                    local maxAttempts   = 18
-                                    local jumpDeb   = tick()
-
-                                    if Mode:lower() == "walk" then
-                                        repeat 
-                                            task.wait(0.05)
-                                            attempts    += 1
-
-                                            if myPath[i+2] then
-                                                headedTowards   = myPath[i+2].Position
-                                            else
-                                                headedTowards   = newMove
-                                            end
-                                            if (v.Action == Enum.PathWaypointAction.Jump or attempts >= math.floor(maxAttempts/1.25)) and tick()-jumpDeb >= 0.3 then
-                                                jumpDeb = tick()
-                                                Player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                                            end
-                                            Player.Character.Humanoid.MaxSlopeAngle = 89.9
-                                            Player.Character.Humanoid:MoveTo(newMove)
-
-                                            if not GameUI.Dash.CooldownLabel.Visible and math.random(1, 30) == 1 then
-                                                Remotes.Action.ActivateAbility:FireServer(999)
-                                            end
-                                        until attempts >= maxAttempts or (Player.Character.HumanoidRootPart.CFrame.Position-newMove).magnitude <= 3 or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or (myTarget.CFrame.Position-originPath).magnitude >= 5
-                                    else
-                                        flyTo(newMove)
-                                    end
-                                    
-                                    if myTarget and myTarget.Parent and myTarget.Parent:FindFirstChild("Humanoid") and myTarget ~= getClosestEnemy(Player.Character.HumanoidRootPart.CFrame.Position) or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or attempts >= maxAttempts or (myTarget.CFrame.Position-originPath).magnitude >= 5 or i >= 3 then
-                                        break
-                                    end
-                                end
-                            end
-                        elseif Player.Character and Player.Character:FindFirstChild("Humanoid") and myTarget and myTarget.Parent then
-                            if Mode:lower() == "walk" then
-                                Player.Character.Humanoid:MoveTo(myTarget.CFrame.Position)
-                            else
-                                flyTo(myTarget.CFrame.Position)
-                            end
+                        end
+                    elseif Player.Character and Player.Character:FindFirstChild("Humanoid") and myTarget and myTarget.Parent then
+                        if Mode:lower() == "walk" then
+                            Player.Character.Humanoid:MoveTo(myTarget.CFrame.Position)
+                        else
+                            flyTo(myTarget.CFrame.Position)
                         end
                     end
                 end
             end
-        end)
-    end
+        end
+    end)
 end
