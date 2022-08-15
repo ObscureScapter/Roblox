@@ -442,12 +442,12 @@ while RunService.RenderStepped:Wait() do
                                 end
                             end
                         end
-                    elseif Player.Character and Player.Character:FindFirstChild("Humanoid") and myTarget and myTarget.Parent then
-                        if mySettings.Mode:lower() == "walk" then
-                            Player.Character.Humanoid:MoveTo(myTarget.CFrame.Position)
-                        else
-                            flyTo(myTarget.CFrame.Position)
-                        end
+                    end
+                elseif Player.Character and Player.Character:FindFirstChild("Humanoid") and myTarget and myTarget.Parent then
+                    if mySettings.Mode:lower() == "walk" then
+                        Player.Character.Humanoid:MoveTo(myTarget.CFrame.Position)
+                    else
+                        flyTo(myTarget.CFrame.Position)
                     end
                 end
             end
