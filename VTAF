@@ -404,6 +404,10 @@ while RunService.RenderStepped:Wait() do
                 })
                 local originPath    = myTarget.CFrame.Position
 
+                if myTarget.Parent:FindFirstChild("WaitingGiantSpider") then
+                    originPath  = Vector3.new(originPath.X, Player.Character.HumanoidRootPart.CFrame.Y, originPath.Z)
+                end
+
                 if mySettings.Mode:lower() == "walk" or mySettings.Mode:lower() == "smarttween" then
                     myPath:ComputeAsync(Player.Character.HumanoidRootPart.CFrame.Position, originPath)
 
