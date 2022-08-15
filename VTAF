@@ -70,6 +70,7 @@ local mySettings    = {
     Mode  = "Walk",
     isFarming = true,
     showNodes   = true,
+    tweenSpeed  = 14,
 }
 local newData, Info	= pcall(function() return readfile("VTAF.lua") end)
 local SettingsController    = getsenv(Gui:WaitForChild("Settings").SettingsController)
@@ -123,36 +124,38 @@ local function createFakeSettings(type, name, value)
     return myValue
 end
 
-CreateDivider("Scapters AutoFarm")
-for i,v in pairs(mySettings) do
-    if type(v) == "boolean" then
-        local realSetting   = createFakeSettings("BoolValue", i, v)
-        CreateToggle(realSetting, i)
-    elseif type(v) == "string" then
-        local realSetting   = createFakeSettings("StringValue", i, v)
-        CreateDropdown(realSetting, "Mode", {"Walk", "Tween", "SmartTween"}, 3)
-    elseif type(v) == "number" then
-        local realSetting   = createFakeSettings("NumberValue", i, v)
-        CreateSlider(realSetting, i, 0.01, 1, 16)
-    end
-end
-
-possibleSettings    = Gui.Settings.SettingsFrame.Settings.Frame:GetChildren()
-for _,v in pairs(possibleSettings) do
-    if v.Name ~= "UIPadding" then
-        if v:FindFirstChild("Label") and (mySettings[v.Label.Text] ~= nil or v.Label.Text == "Scapters AutoFarm") then
-            v.Position  =  v.Position+UDim2.new(0, 0, 0, 80 * 28)
-
-            if v.Label.Text == "Mode" then
-                v.Frame.DropdownButton.Option:GetPropertyChangedSignal("Text"):Connect(function()
-                    Player.Mode.Value   = v.Frame.DropdownButton.Option.Text
-                end)
-            end
+pcall(function()
+    CreateDivider("Scapters AutoFarm")
+    for i,v in pairs(mySettings) do
+        if type(v) == "boolean" then
+            local realSetting   = createFakeSettings("BoolValue", i, v)
+            CreateToggle(realSetting, i)
+        elseif type(v) == "string" then
+            local realSetting   = createFakeSettings("StringValue", i, v)
+            CreateDropdown(realSetting, "Mode", {"Walk", "Tween", "SmartTween"}, 3)
+        elseif type(v) == "number" then
+            local realSetting   = createFakeSettings("IntValue", i, v)
+            CreateSlider(realSetting, i, 0.01, 1, 16)
         end
-        uIScale += 80
     end
-end
-Gui.Settings.SettingsFrame.Settings.Frame.CanvasSize    = UDim2.new(0, 0, 0, uIScale * myScale)
+
+    possibleSettings    = Gui.Settings.SettingsFrame.Settings.Frame:GetChildren()
+    for _,v in pairs(possibleSettings) do
+        if v.Name ~= "UIPadding" then
+            if v:FindFirstChild("Label") and (mySettings[v.Label.Text] ~= nil or v.Label.Text == "Scapters AutoFarm") then
+                v.Position  =  v.Position+UDim2.new(0, 0, 0, 80 * 28)
+
+                if v.Label.Text == "Mode" then
+                    v.Frame.DropdownButton.Option:GetPropertyChangedSignal("Text"):Connect(function()
+                        Player.Mode.Value   = v.Frame.DropdownButton.Option.Text
+                    end)
+                end
+            end
+            uIScale += 80
+        end
+    end
+    Gui.Settings.SettingsFrame.Settings.Frame.CanvasSize    = UDim2.new(0, 0, 0, uIScale * myScale)
+end)
 
 nodeHolder.Name = "Nodes"
 nodeHolder.Parent   = Map
