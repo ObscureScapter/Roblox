@@ -82,6 +82,8 @@ local uIScale   = 0
 
 --  functions
 
+if game.PlaceVersion ~= 915 then Player:Kick("\nGame Updated\nWait For Script Update!") return end
+
 if not newData or not Info then
 	writefile("VTAF.lua", HttpService:JSONEncode(mySettings))
 else
