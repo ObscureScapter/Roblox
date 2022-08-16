@@ -309,7 +309,7 @@ RunService.RenderStepped:Connect(function()
             end
         end
         
-        if Player.Character.Humanoid.Health <= Player.Character.Humanoid.MaxHealth/2.5 and GameUI:FindFirstChild("Item4") and not GameUI["Item4"].CooldownLabel.Visible then
+        if Player.Character.Humanoid.Health <= Player.Character.Humanoid.MaxHealth/2 and GameUI:FindFirstChild("Item4") and not GameUI["Item4"].CooldownLabel.Visible then
             Remotes.Action.ActivateAbility:FireServer(6)
         end
 
@@ -385,7 +385,7 @@ while RunService.RenderStepped:Wait() do
                 end
 
                 for _,v in pairs(Map.Segments:GetDescendants()) do
-                    if v:IsA("BasePart") and v.Transparency < 1 and not v.Name:find("Wall") and not v.Name:find("Bricks") and not v.Name:find("Floor") and not v.Parent.Name:find("Floor") and not v.Name:lower():find("coin") then
+                    if v:IsA("BasePart") and v.Transparency < 1 and (v.Parent.Name == "Wall_StoneBrick_ThickVariant1" or not v.Name:find("Wall") and not v.Name:find("Bricks") and not v.Name:find("Floor") and not v.Parent.Name:find("Floor") and not v.Name:lower():find("coin")) then
                         v.CanCollide    = false
                     end
                 end
@@ -400,7 +400,7 @@ while RunService.RenderStepped:Wait() do
                     AgentRadius = 2,
                     AgentHeight = 4,
                     AgentCanJump = true,
-                    WaypointSpacing = 4.75,
+                    WaypointSpacing = 4.15,
                 })
                 local originPath    = myTarget.CFrame.Position
 
