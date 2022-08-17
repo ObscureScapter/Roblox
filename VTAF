@@ -166,7 +166,8 @@ local function getWeaponType()
                     end
                 end
 
-                local attackSpeed   = 1 / (realItem.AttackSpeed.Value * 1.03 ^ (v.Rarity.Value - realItem.BaseRarity.Value) * (1 + myBoost / 100))
+                local realSpeed = realItem:FindFirstChild("AttackSpeed") and realItem.AttackSpeed.Value or 1
+                local attackSpeed   = 1 / (realSpeed * 1.03 ^ (v.Rarity.Value - realItem.BaseRarity.Value) * (1 + myBoost / 100))
                 local weaponIndex   = v.Name:gsub("Wep", "")
 
                 if realItem:FindFirstChild("Range") then
