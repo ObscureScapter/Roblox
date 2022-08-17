@@ -29,8 +29,8 @@ local Projectiles   = Workspace:WaitForChild("Projectiles")
 local IPDFunctions = require(ReplicatedStorage:WaitForChild("Modules").IPDFunctions)
 local WeaponOneLast = tick()
 local WeaponTwoLast = tick()
-local WeaponOneRange    = 64
-local WeaponTwoRange    = 64
+local WeaponOneRange    = 128
+local WeaponTwoRange    = 128
 local ControlSettings  = ReplicatedStorage:WaitForChild("ControlSettings")
 local forceLook = Mouse.Hit.Position
 local headedTowards = Mouse.Hit.Position
@@ -183,17 +183,17 @@ local function getWeaponType()
                 if myTags then
                     for i, c in pairs(myTags:GetChildren()) do
                         myBoost = myBoost + IPDFunctions:GetBoostValue(Player.Character, c.Name .. "AttackSpeedBoost")
-                    end;
-                end;
+                    end
+                end
 
                 local attackSpeed   = 1 / (realItem.AttackSpeed.Value * 1.03 ^ (v.Rarity.Value - realItem.BaseRarity.Value) * (1 + myBoost / 100))
                 local weaponIndex   = v.Name:gsub("Wep", "")
 
                 if realItem:FindFirstChild("Range") then
                     if tonumber(weaponIndex) == 1 then 
-                        WeaponOneRange   = realItem.Range.Value+1.5
+                        WeaponOneRange   = realItem.Range.Value+2.5
                     else 
-                        WeaponTwoRange    = realItem.Range.Value+1.5
+                        WeaponTwoRange    = realItem.Range.Value+2.5
                     end
                 end
                 table.insert(myRemoteCalls, {myRemote, tonumber(weaponIndex), attackSpeed})
@@ -366,14 +366,14 @@ while RunService.RenderStepped:Wait() do
         if Player.Character:FindFirstChild("HumanoidRootPart") and mySettings.isFarming then
             local myTarget  = getClosestEnemy(Player.Character.HumanoidRootPart.CFrame.Position)
 
-            if Projectiles:FindFirstChild("WaitingForPlayers") or Projectiles:FindFirstChild("BossWaitingForPlayers") or Map:FindFirstChild("LootChest") and not DungeonGui.LootContainer.Visible then
-                myTarget    = Projectiles:FindFirstChild("WaitingForPlayers") and Projectiles["WaitingForPlayers"] or Projectiles:FindFirstChild("BossWaitingForPlayers") and Projectiles["BossWaitingForPlayers"] or Map["LootChest"].PrimaryPart
+            if Projectiles:FindFirstChild("WaitingForPlayers") or Projectiles:FindFirstChild("BossWaitingForPlayers") or Map:FindFirstChild("LootChest") or Map:FindFirstChild("RaidLootChest") and not DungeonGui.LootContainer.Visible then
+                myTarget    = Projectiles:FindFirstChild("WaitingForPlayers") and Projectiles["WaitingForPlayers"] or Projectiles:FindFirstChild("BossWaitingForPlayers") and Projectiles["BossWaitingForPlayers"] or Map:FindFirstChild("LootChest") and Map["LootChest"].PrimaryPart or Map["RaidLootChest"].PrimaryPart
             
-                if myTarget and myTarget.Parent and myTarget.Parent.Name == "LootChest" then
+                if myTarget and myTarget.Parent and (myTarget.Parent.Name == "LootChest" or myTarget.Parent.Name == "RaidLootChest" then
                     Remotes.UI.EndDungeon.EndOfDungeonVote:FireServer("ReplayDungeon")
                     repeat RunService.RenderStepped:Wait() until Projectiles:FindFirstChild("WaitingForPlayers")
 
-                    myTarget    = Projectiles:FindFirstChild("WaitingForPlayers") and Projectiles["WaitingForPlayers"] or Projectiles:FindFirstChild("BossWaitingForPlayers") and Projectiles["BossWaitingForPlayers"] or Map["LootChest"].PrimaryPart
+                    myTarget    = Projectiles:FindFirstChild("WaitingForPlayers") and Projectiles["WaitingForPlayers"] or Projectiles:FindFirstChild("BossWaitingForPlayers") and Projectiles["BossWaitingForPlayers"] or Map:FindFirstChild("LootChest") and Map["LootChest"].PrimaryPart or Map["RaidLootChest"].PrimaryPart
                 end
             end
 
@@ -385,7 +385,7 @@ while RunService.RenderStepped:Wait() do
                 end
 
                 for _,v in pairs(Map.Segments:GetDescendants()) do
-                    if v:IsA("BasePart") and v.Transparency < 1 and (v.Parent.Name == "Wall_StoneBrick_ThickVariant1" or not v.Name:find("Wall") and not v.Name:find("Bricks") and not v.Name:find("Floor") and not v.Parent.Name:find("Floor") and not v.Name:lower():find("coin")) then
+                    if v:IsA("BasePart") and v.Transparency < 1 and (v.Parent.Name == "Balustrade1_Angled_Variant1" or v.Parent.Name == "Balustrade1_Straight_Variant2" or not v.Name:find("Wall") and not v.Name:find("Bricks") and not v.Name:find("Floor") and not v.Parent.Name:find("Floor") and not v.Name:lower():find("coin")) then
                         v.CanCollide    = false
                     end
                 end
@@ -400,7 +400,7 @@ while RunService.RenderStepped:Wait() do
                     AgentRadius = 2,
                     AgentHeight = 4,
                     AgentCanJump = true,
-                    WaypointSpacing = 4.15,
+                    WaypointSpacing = 4.2,
                 })
                 local originPath    = myTarget.CFrame.Position
 
@@ -447,7 +447,7 @@ while RunService.RenderStepped:Wait() do
                                         Player.Character.Humanoid.MaxSlopeAngle = 89.9
                                         Player.Character.Humanoid:MoveTo(newMove)
 
-                                        if not GameUI.Dash.CooldownLabel.Visible and math.random(1, 30) == 1 then
+                                        if not GameUI.Dash.CooldownLabel.Visible and math.random(1, 25) == 1 then
                                             Remotes.Action.ActivateAbility:FireServer(999)
                                         end
                                     until not mySettings.isFarming or attempts >= maxAttempts or (Player.Character.HumanoidRootPart.CFrame.Position-newMove).magnitude <= 3 or not myTarget or not myTarget.Parent or myTarget.Parent:FindFirstChild("Humanoid") and myTarget.Parent.Humanoid.Health <= 0 or (myTarget.CFrame.Position-originPath).magnitude >= 5
