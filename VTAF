@@ -60,19 +60,14 @@ local ItemTypes = {
 }
 local finishedLevel = false
 local nodeHolder    = Instance.new("Folder")
-local defaultSettings    = {
-    Mode  = "Walk",
-    isFarming = true,
-    showNodes   = true,
-    tweenSpeed  = 14,
-}
 local mySettings    = {
     Mode  = "Walk",
     isFarming = true,
     showNodes   = true,
+    killAura    = true,
     tweenSpeed  = 14,
+    pathNodeGap = 4.2,
 }
-local newData, Info	= pcall(function() return readfile("VTAF.lua") end)
 local SettingsController    = getsenv(Gui:WaitForChild("Settings").SettingsController)
 local CreateDropdown    = SettingsController.CreateDropdown
 local CreateToggle    = SettingsController.CreateToggle
@@ -84,26 +79,12 @@ local uIScale   = 0
 
 --  functions
 
-if game.PlaceVersion ~= 763 then Player:Kick("\nGame Updated\nWait For Script Update!") return end
+if game.PlaceVersion ~= 763 then Player:Kick("\nGame Updated.\nWait For Script Update!") return end
 
 for i,v in pairs(getconnections(Player.Idled)) do
     v:Disable()
 end
 ScriptContext:SetTimeout(2)
-
-if not newData or not Info then
-	writefile("VTAF.lua", HttpService:JSONEncode(mySettings))
-else
-	mySettings	= HttpService:JSONDecode(Info)
-end
-
-for i,v in pairs(defaultSettings) do
-	if mySettings[i] == nil then
-		mySettings[i]	= v
-
-		writefile("VTAF.lua", HttpService:JSONEncode(mySettings))
-	end
-end
 
 local function createFakeSettings(type, name, value)
     local myValue   = Instance.new(type)
@@ -118,7 +99,6 @@ local function createFakeSettings(type, name, value)
 
     myValue:GetPropertyChangedSignal("Value"):Connect(function()
         mySettings[name]    = myValue.Value
-        writefile("VTAF.lua", HttpService:JSONEncode(mySettings))
     end)
 
     return myValue
@@ -291,7 +271,7 @@ Player.OnTeleport:Connect(function(State)
 end)
 
 RunService.RenderStepped:Connect(function()
-    if checkHumanoid(Player.Character) then
+    if checkHumanoid(Player.Character) and mySettings.killAura then
         local myTargets = {
             Targets = {},
             Time    = tick(),
@@ -400,7 +380,7 @@ while RunService.RenderStepped:Wait() do
                     AgentRadius = 2,
                     AgentHeight = 4,
                     AgentCanJump = true,
-                    WaypointSpacing = 4.2,
+                    WaypointSpacing = mySettings.pathNodeGap,
                 })
                 local originPath    = myTarget.CFrame.Position
 
