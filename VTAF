@@ -369,7 +369,7 @@ while RunService.RenderStepped:Wait() do
             if Projectiles:FindFirstChild("WaitingForPlayers") or Projectiles:FindFirstChild("BossWaitingForPlayers") or Map:FindFirstChild("LootChest") or Map:FindFirstChild("RaidLootChest") and not DungeonGui.LootContainer.Visible then
                 myTarget    = Projectiles:FindFirstChild("WaitingForPlayers") and Projectiles["WaitingForPlayers"] or Projectiles:FindFirstChild("BossWaitingForPlayers") and Projectiles["BossWaitingForPlayers"] or Map:FindFirstChild("LootChest") and Map["LootChest"].PrimaryPart or Map["RaidLootChest"].PrimaryPart
             
-                if myTarget and myTarget.Parent and (myTarget.Parent.Name == "LootChest" or myTarget.Parent.Name == "RaidLootChest" then
+                if myTarget and myTarget.Parent and (myTarget.Parent.Name == "LootChest" or myTarget.Parent.Name == "RaidLootChest") then
                     Remotes.UI.EndDungeon.EndOfDungeonVote:FireServer("ReplayDungeon")
                     repeat RunService.RenderStepped:Wait() until Projectiles:FindFirstChild("WaitingForPlayers")
 
