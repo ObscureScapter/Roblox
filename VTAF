@@ -31,6 +31,8 @@ local WeaponOneLast = tick()
 local WeaponTwoLast = tick()
 local WeaponOneRange    = 128
 local WeaponTwoRange    = 128
+local WeaponTypeOne = "Ranged"
+local WeaponTypeTwo = "Ranged"
 local ControlSettings  = ReplicatedStorage:WaitForChild("ControlSettings")
 local forceLook = Mouse.Hit.Position
 local headedTowards = Mouse.Hit.Position
@@ -79,7 +81,7 @@ local uIScale   = 0
 
 --  functions
 
-if game.PlaceVersion ~= 763 then Player:Kick("\nGame Updated.\nWait For Script Update!") return end
+if game.PlaceVersion ~= 764 then Player:Kick("\nGame Updated.\nWait For Script Update!") return end
 
 for i,v in pairs(getconnections(Player.Idled)) do
     v:Disable()
@@ -161,7 +163,7 @@ local function getWeaponType()
                 local myTags = realItem:FindFirstChild("Tags")
 
                 if myTags then
-                    for i, c in pairs(myTags:GetChildren()) do
+                    for q, c in pairs(myTags:GetChildren()) do
                         myBoost = myBoost + IPDFunctions:GetBoostValue(Player.Character, c.Name .. "AttackSpeedBoost")
                     end
                 end
@@ -169,6 +171,12 @@ local function getWeaponType()
                 local realSpeed = realItem:FindFirstChild("AttackSpeed") and realItem.AttackSpeed.Value or 1
                 local attackSpeed   = 1 / (realSpeed * 1.03 ^ (v.Rarity.Value - realItem.BaseRarity.Value) * (1 + myBoost / 100))
                 local weaponIndex   = v.Name:gsub("Wep", "")
+
+                if tonumber(weaponIndex) == 1 and (myRemote == MagicAttack or myRemote == BowAttack) then
+                    WeaponTypeOne   = "Ranged"
+                elseif tonumber(weaponIndex) == 2 and (myRemote == MagicAttack or myRemote == BowAttack) then
+                    WeaponTypeTwo   = "Ranged"
+                end
 
                 if realItem:FindFirstChild("Range") then
                     if tonumber(weaponIndex) == 1 then 
@@ -388,6 +396,19 @@ while RunService.RenderStepped:Wait() do
                 if myTarget.Parent:FindFirstChild("WaitingGiantSpider") then
                     originPath  = Vector3.new(originPath.X, Player.Character.HumanoidRootPart.CFrame.Y, originPath.Z)
                 end
+                --[[if WeaponTypeOne == "Ranged" or WeaponTypeTwo == "Ranged" then
+                    local rayParams	= RaycastParams.new()
+                    rayParams.FilterType	= Enum.RaycastFilterType.Blacklist
+                    rayParams.FilterDescendantsInstances	= {Player.Character, myTarget.Parent, Projectiles, NPCs}
+                    rayParams.IgnoreWater	= true
+                    
+                    local endGoal   = myTarget.CFrame*CFrame.new(0, 0, -20).Position
+                    local rayCast	= Workspace:Raycast(originPath, (originPath-endGoal).unit*20, rayParams)
+
+                    if rayCast and rayCast.Position then
+                        originPath  = rayCast.Position
+                    end
+                end]]
 
                 if mySettings.Mode:lower() == "walk" or mySettings.Mode:lower() == "smarttween" then
                     myPath:ComputeAsync(Player.Character.HumanoidRootPart.CFrame.Position, originPath)
